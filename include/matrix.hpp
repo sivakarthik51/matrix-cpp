@@ -285,6 +285,31 @@ namespace matrixlib
         return result;
     }
 
+    // ---- Matrix * Matrix (mixed types) ----
+    template <
+        typename T1, typename T2,
+        typename R = typename std::common_type<T1, T2>::type,
+        typename = EnableIfArithmetic<T1>,
+        typename = EnableIfArithmetic<T2>>
+    Matrix<R> operator*(const Matrix<T1> &a, const Matrix<T2> &b)
+    {
+        if (a.cols() != b.rows())
+            throw std::runtime_error("Matrix dimension mismatch");
+
+        Matrix<R> result(a.rows(), b.cols(), R{});
+        for (std::size_t i = 0; i < a.rows(); ++i)
+        {
+            for (std::size_t j = 0; j < b.cols(); ++j)
+            {
+                R sum = R{};
+                for (std::size_t k = 0; k < a.cols(); ++k)
+                    sum += static_cast<R>(a(i, k)) * static_cast<R>(b(k, j));
+                result(i, j) = sum;
+            }
+        }
+        return result;
+    }
+
     // ---- Stream output ----
     template <typename T, typename = EnableIfArithmetic<T>>
     std::ostream &operator<<(std::ostream &os, const Matrix<T> &mat)
