@@ -30,3 +30,33 @@ jobs:
       - name: Build and run tests
         run: |
           make test
+    release:
+      name: Package and Release
+      runs-on: ubuntu-latest
+      needs: build-and-test
+      if: github.event_name == 'release'
+
+      steps:
+        - name: Checkout repository
+          uses: actions/checkout@v4
+
+        - name: Build static library
+          run: |
+            mkdir -p build
+            g++ -std=c++17 -O2 -c src/*.cpp -Iinclude -o build/matrix.o
+            ar rcs build/libmatrix.a build/matrix.o
+
+        - name: Package artifacts
+          run: |
+            mkdir -p dist/include
+            cp -r include/* dist/include/
+            cp build/libmatrix.a dist/
+            tar -czf matrixlib-${{ github.ref_name }}.tar.gz -C dist .
+            zip -r matrixlib-${{ github.ref_name }}.zip dist
+
+        - name: Upload release assets
+          uses: softprops/action-gh-release@v2
+          with:
+            files: |
+              matrixlib-${{ github.ref_name }}.tar.gz
+              matrixlib-${{ github.ref_name }}.zip
