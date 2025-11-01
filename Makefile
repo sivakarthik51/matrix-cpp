@@ -14,7 +14,8 @@ all: test example
 
 test: $(TEST_BIN)
 	@echo "Running tests..."
-	@$(TEST_BIN)
+	@$(TEST_BIN) || (echo "❌ Tests failed" && exit 1)
+	@echo "✅ All tests passed!"
 
 $(TEST_BIN): $(TEST_SRC)
 	$(CXX) $(CXXFLAGS) $^ -o $@
