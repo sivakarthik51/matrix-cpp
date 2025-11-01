@@ -29,20 +29,30 @@ MatrixLib is designed to be **simple, modern, and cross-platform**, with clean b
 
 ## ⚙️ Building the Library
 
-### 🔹 Linux / macOS
+```bash
+# Build in Release mode
+mkdir build
+cd build
+cmake .. -DCMAKE_BUILD_TYPE=Release
+cmake --build .
+
+# Run tests
+ctest --output-on-failure
+
+```
+
+## 🔹 Installing the library and headers
 
 ```bash
-make test
+cmake --install . --prefix /usr/local   # Linux/macOS
+cmake --install . --prefix C:/MatrixLib # Windows
 ```
-This builds the test binary (tests/test_matrix) and runs all tests.
 
-### 🔹 Windows (MSYS2 MINGW64)
+This installs:
 
-```bash
-pacman -S --needed make mingw-w64-x86_64-gcc
-make test
-```
-The CI automatically sets up make and g++ if you use the provided GitHub Actions workflow.
+Headers → include/matrixlib
+
+Static library → libmatrix.a (or matrix.lib on Windows)
 
 
 ## 🧪 Running Tests
@@ -95,21 +105,6 @@ Matrix D:
  [15, 19, 23]]
 ```
 
-## 🧱 Build System
-MatrixLib uses a simple GNU Makefile with the following targets:
-
-| Command      | Description               |
-| ------------ | ------------------------- |
-| `make`       | Builds the library        |
-| `make test`  | Builds and runs all tests |
-| `make clean` | Removes build artifacts   |
-
-The Makefile works with:
-
-* GCC (g++)
-* Clang
-* MSYS2 / MinGW on Windows
-
 ## 📦 Installation
 
 You can use MatrixLib as a header-only library:
@@ -140,7 +135,6 @@ g++ -std=c++17 main.cpp -Lbuild -lmatrix -Iinclude -o main
 - GCC 9+
 - Clang 10+
 - MSVC (via MSYS2 MinGW64)
-- make
 - (Optional) Catch2 for testing
 
 ## 📝 License
