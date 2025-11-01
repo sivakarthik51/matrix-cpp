@@ -30,15 +30,19 @@ MatrixLib is designed to be **simple, modern, and cross-platform**, with clean b
 ## ⚙️ Building the Library
 
 ```bash
-# Build in Release mode
+# Create build directory
 mkdir build
 cd build
-cmake .. -DCMAKE_BUILD_TYPE=Release
-cmake --build .
 
-# Run tests
+# Build CPU library only
+cmake .. -DCMAKE_BUILD_TYPE=Release -DENABLE_CUDA=OFF
+cmake --build .
 ctest --output-on-failure
 
+# Build CPU + CUDA library
+cmake .. -DCMAKE_BUILD_TYPE=Release -DENABLE_CUDA=ON
+cmake --build .
+ctest --output-on-failure
 ```
 
 ## 🔹 Installing the library and headers
