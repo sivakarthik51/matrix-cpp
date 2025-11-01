@@ -23,40 +23,77 @@ jobs:
         with:
           python-version: '3.x'  # Required for setup caching step, safe default
 
-      - name: Install build tools
+       # 🧰 Linux dependencies
+      - name: Install build tools (Linux)
         if: runner.os == 'Linux'
         run: sudo apt-get update && sudo apt-get install -y build-essential
 
-      - name: Build and run tests
+      # 🍏 macOS: clang and make are preinstalled
+      - name: Confirm build tools (macOS)
+        if: runner.os == 'macOS'
+        run: clang++ --version
+
+      # 🪟 Windows (MSYS2 provides compiler + make)
+      - name: Set up MSYS2 (Windows)
+        if: runner.os == 'Windows'
+        uses: msys2/setup-msys2@v2
+        with:
+          update: true
+          msystem: MINGW64
+          install: >-
+            mingw-w64-x86_64-gcc
+            make
+            mingw-w64-x86_64-binutils
+
+      - name: Build and run tests (Linux/macOS)
+        if: runner.os != 'Windows'
         run: |
+          echo "Compiler version:"
+          g++ --version
           make test
-    release:
-      name: Package and Release
-      runs-on: ubuntu-latest
-      needs: build-and-test
-      if: github.event_name == 'release'
 
-      steps:
-        - name: Checkout repository
-          uses: actions/checkout@v4
+      - name: Build and run tests (Windows via MSYS2)
+        if: runner.os == 'Windows'
+        shell: msys2 {0}
+        run: |
+          echo "Using MSYS2 MINGW64 environment"
+          which g++
+          g++ --version
 
-        - name: Build static library
-          run: |
-            mkdir -p build
-            g++ -std=c++17 -O2 -c src/*.cpp -Iinclude -o build/matrix.o
-            ar rcs build/libmatrix.a build/matrix.o
+          # Create alias for make if needed
+          if ! command -v make &>/dev/null && command -v mingw32-make &>/dev/null; then
+            echo "Creating alias for make..."
+            ln -s $(which mingw32-make) /usr/bin/make
+          fi
 
-        - name: Package artifacts
-          run: |
-            mkdir -p dist/include
-            cp -r include/* dist/include/
-            cp build/libmatrix.a dist/
-            tar -czf matrixlib-${{ github.ref_name }}.tar.gz -C dist .
-            zip -r matrixlib-${{ github.ref_name }}.zip dist
+          make test
+  release:
+    name: Package and Release
+    runs-on: ubuntu-latest
+    needs: build-and-test
+    if: github.event_name == 'release'
 
-        - name: Upload release assets
-          uses: softprops/action-gh-release@v2
-          with:
-            files: |
-              matrixlib-${{ github.ref_name }}.tar.gz
-              matrixlib-${{ github.ref_name }}.zip
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Build static library
+        run: |
+          mkdir -p build
+          g++ -std=c++17 -O2 -c src/*.cpp -Iinclude -o build/matrix.o
+          ar rcs build/libmatrix.a build/matrix.o
+
+      - name: Package artifacts
+        run: |
+          mkdir -p dist/include
+          cp -r include/* dist/include/
+          cp build/libmatrix.a dist/
+          tar -czf matrixlib-${{ github.ref_name }}.tar.gz -C dist .
+          zip -r matrixlib-${{ github.ref_name }}.zip dist
+
+      - name: Upload release assets
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            matrixlib-${{ github.ref_name }}.tar.gz
+            matrixlib-${{ github.ref_name }}.zip
